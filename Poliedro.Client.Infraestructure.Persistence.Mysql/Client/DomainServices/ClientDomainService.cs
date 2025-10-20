@@ -1,0 +1,134 @@
+﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Poliedro.Billing.Domain.Common.Results;
+using Poliedro.Billing.Domain.Common.Results.Errors;
+using Poliedro.Client.Application.Client.Errors.Client;
+using Poliedro.Client.Domain.ClientPos.DomainServices;
+using Poliedro.Client.Domain.ClientPos.Entities;
+using Poliedro.Client.Domain.ClientPos.Models.Enums;
+using Poliedro.Client.Infraestructure.Persistence.Mysql.Context;
+
+namespace Poliedro.Client.Infraestructure.Persistence.Mysql.Client.DomainServices
+{
+    internal class ClientDomainService : IClientDomainService
+    {
+        private readonly ClientDbContext _context;
+
+        public ClientDomainService(ClientDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<Result<VoidResult, Error>> CreateClientLegalAsync(ClientLegalPosEntity request, CancellationToken cancellationToken)
+        {
+            await _context.ClientLegalPos.AddAsync(request, cancellationToken);
+            var result = await _context.SaveChangesAsync() > 0;
+            if (!result)
+                return ClienErrorBuilder.ClientLegalCreationException();
+
+            return VoidResult.Instance;
+        }
+
+        public async Task<Result<VoidResult, Error>> CreateClientNaturalAsync(ClientNaturalPosEntity request, CancellationToken cancellationToken)
+        {
+            await _context.ClientNaturalPos.AddAsync(request, cancellationToken);
+            var result = await _context.SaveChangesAsync() > 0;
+            if (!result)
+                return ClienErrorBuilder.ClientNaturalCreationException();
+
+            return VoidResult.Instance;
+        }
+
+        public async Task<Result<IEnumerable<ClientLegalPosEntity>, Error>> GetAllLegalAsync(int pageNumber, int pageSize, CancellationToken cancellationToken)
+        {
+            var entities = await _context.ClientLegalPos
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize).ToListAsync(cancellationToken);
+
+            if (entities.Count == 0)
+                return ClienErrorBuilder.NoDocumentTypeRecordsFoundException();
+
+            return entities;
+        }
+
+        public async Task<Result<IEnumerable<ClientNaturalPosEntity>, Error>> GetAllNaturalAsync(int pageNumber, int pageSize, CancellationToken cancellationToken)
+        {
+            var entities = await _context.ClientNaturalPos
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize).ToListAsync(cancellationToken);
+
+            if (entities.Count == 0)
+                return ClienErrorBuilder.NoDocumentTypeRecordsFoundException();
+
+            return entities;
+        }
+
+        public async Task<Result<ClientEntity, Error>> GetByIdAsync(int id, ClientType type, CancellationToken cancellationToken)
+        {
+            ClientEntity client = new ClientEntity();
+
+            if (type == ClientType.Legal && await LegalClientExists(id, cancellationToken))
+            {
+                client = await _context.ClientLegalPos.FirstAsync(c => c.Id == id);
+            }
+            else if(type == ClientType.Natural && await NaturalClientExists(id, cancellationToken))
+            {
+                client = await _context.ClientNaturalPos.FirstAsync(c => c.Id == id);
+            }
+            else
+            {
+                return ClienErrorBuilder.ClienNotFoundException(id);
+            }
+
+            return client;
+        }
+
+        public async Task<Result<ClientEntity, Error>> GetByDocumentNumberAsync(string documentNumber, ClientType type, CancellationToken cancellationToken)
+        {
+            ClientEntity client = new ClientEntity();
+
+            if (type == ClientType.Legal && await LegalClientExists(documentNumber, cancellationToken))
+            {
+                client = await _context.ClientLegalPos.FirstAsync(c => c.DocumentNumber == documentNumber);
+            }
+            else if (type == ClientType.Natural && await NaturalClientExists(documentNumber, cancellationToken))
+            {
+                client = await _context.ClientNaturalPos.FirstAsync(c => c.DocumentNumber == documentNumber);
+            }
+            else
+            {
+                return ClienErrorBuilder.ClienNotFoundException(documentNumber);
+            }
+
+            return client;
+        }
+
+        private async Task<bool> LegalClientExists(int id, CancellationToken cancellationToken)
+        {
+            return await _context.ClientLegalPos
+                .AsNoTracking()
+                .AnyAsync(c => c.Id == id, cancellationToken);
+        }
+
+        private async Task<bool> NaturalClientExists(int id, CancellationToken cancellationToken)
+        {
+            return await _context.ClientNaturalPos
+                .AsNoTracking()
+                .AnyAsync(c => c.Id == id, cancellationToken);
+        }
+
+        private async Task<bool> LegalClientExists(string documentNumber, CancellationToken cancellationToken)
+        {
+            return await _context.ClientLegalPos
+                .AsNoTracking()
+                .AnyAsync(c => c.DocumentNumber == documentNumber, cancellationToken);
+        }
+
+        private async Task<bool> NaturalClientExists(string documentNumber, CancellationToken cancellationToken)
+        {
+            return await _context.ClientNaturalPos
+                .AsNoTracking()
+                .AnyAsync(c => c.DocumentNumber == documentNumber, cancellationToken);
+        }   
+    }
+}
