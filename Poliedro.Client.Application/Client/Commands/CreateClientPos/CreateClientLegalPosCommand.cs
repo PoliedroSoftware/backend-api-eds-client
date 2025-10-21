@@ -5,10 +5,10 @@ using Poliedro.Billing.Domain.Common.Results.Errors;
 namespace Poliedro.Client.Application.Client.Commands.CreateClientPos
 {
     public record CreateClientLegalPosCommand(
-        string CompanyName,
+        string? CompanyName,
         int? VerificationDigit,
-        string DocumentNumber,
-        string ElectronicInvoiceEmail,
+        string? DocumentNumber,
+        string? ElectronicInvoiceEmail,
         bool? VATResponsibleParty,
         bool? SelfRetainer,
         bool? WithholdingAgent,
