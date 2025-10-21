@@ -23,8 +23,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Poliedro.Client.Application\Poliedro.Client.Application.csproj" />
     <ProjectReference Include="..\Poliedro.Client.Domain\Poliedro.Client.Domain.csproj" />
-    <ProjectReference Include="..\Poliedro.Client.Infraestructure.External.Plemsi\Poliedro.Client.Infraestructure.External.Plemsi.csproj" />
-    <ProjectReference Include="..\Poliedro.Client.Infraestructure.External.TNS\Poliedro.Client.Infraestructure.External.TNS.csproj" />
     <ProjectReference Include="..\Poliedro.Client.Infraestructure.Persistence.Mysql\Poliedro.Client.Infraestructure.Persistence.Mysql.csproj" />
   </ItemGroup>
 

@@ -1,11 +1,7 @@
 using Poliedro.Billing.Api;
 using Poliedro.Billing.Api.Common.Configurations;
 using Poliedro.Billing.Application;
-using Poliedro.Billing.Infraestructure.External.Plemsi;
-using Poliedro.Billing.Infraestructure.External.TNS;
 using Poliedro.Billing.Infraestructure.Persistence.Mysql;
-
-using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
@@ -17,8 +13,6 @@ builder.Logging.AddConsole();
 builder.Services
     .AddWebApi()
     .AddApplication()
-    .AddExternalPlemsi(builder.Configuration)
-    .AddExternalTns(builder.Configuration)
     .AddPersistence(builder.Configuration);
 
 builder.Services.AddControllers(options =>
