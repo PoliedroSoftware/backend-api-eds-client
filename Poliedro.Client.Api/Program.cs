@@ -1,4 +1,4 @@
-using Poliedro.Billing.Api;
+using Poliedro.Client.Api.Extensions;
 using Poliedro.Billing.Api.Common.Configurations;
 using Poliedro.Billing.Application;
 using Poliedro.Billing.Infraestructure.Persistence.Mysql;
@@ -11,9 +11,11 @@ builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 
 builder.Services
-    .AddWebApi()
     .AddApplication()
     .AddPersistence(builder.Configuration);
+
+// Add Custom Health Checks
+builder.Services.AddCustomHealthChecks();
 
 builder.Services.AddControllers(options =>
 {
@@ -37,7 +39,9 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
 app.UseCors("PoliedroBilling");
+
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -48,6 +52,9 @@ if (app.Environment.IsDevelopment())
         options.RoutePrefix = string.Empty;
     });
 }
+
+// Configure Health Check endpoints
+app.UseHealthCheckEndpoints();
 
 app.MapControllers();
 app.Run();
