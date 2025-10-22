@@ -1,13 +1,12 @@
 ﻿using MediatR;
 using Poliedro.Billing.Domain.Common.Results;
 using Poliedro.Billing.Domain.Common.Results.Errors;
-using Poliedro.Client.Domain.ClientPos.Entities;
+using Poliedro.Client.Application.Client.Dtos;
 
-namespace Poliedro.Client.Application.Client.Queries.Client
+namespace Poliedro.Client.Application.Client.Queries.Client;
+
+public record GetAllClientLegalQuery : IRequest<Result<IEnumerable<ClientDto>, Error>>
 {
-    public record GetAllClientLegalQuery : IRequest<Result<IEnumerable<ClientLegalPosEntity>, Error>>
-    {
-        public int PageNumber { get; set; }
-        public int PageSize { get; set; }
-    }
+    public int PageNumber { get; set; }
+    public int PageSize { get; set; }
 }
