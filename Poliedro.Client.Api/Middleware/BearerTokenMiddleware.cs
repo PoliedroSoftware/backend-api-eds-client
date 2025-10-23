@@ -40,9 +40,8 @@ public class BearerTokenMiddleware(
 
         var publicEndpoints = new List<string>
         {
+            "/api/v1/health",
             "/health",
-            "/health/ready",
-            "/health/live",
             "/swagger",
             "/index.html",
             "/swagger.json"
