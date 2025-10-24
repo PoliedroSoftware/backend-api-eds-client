@@ -10,19 +10,12 @@ using Poliedro.Client.Infraestructure.Persistence.Mysql.Context;
 
 namespace Poliedro.Client.Infraestructure.Persistence.Mysql.Client.DomainServices
 {
-    internal class ClientDomainService : IClientDomainService
+    internal class ClientDomainService(ClientDbContext context) : IClientDomainService
     {
-        private readonly ClientDbContext _context;
-
-        public ClientDomainService(ClientDbContext context)
-        {
-            _context = context;
-        }
-
         public async Task<Result<VoidResult, Error>> CreateClientLegalAsync(ClientLegalPosEntity request, CancellationToken cancellationToken)
         {
-            await _context.ClientLegalPos.AddAsync(request, cancellationToken);
-            var result = await _context.SaveChangesAsync() > 0;
+            await context.ClientLegalPos.AddAsync(request, cancellationToken);
+            var result = await context.SaveChangesAsync() > 0;
             if (!result)
                 return ClienErrorBuilder.ClientLegalCreationException();
 
@@ -31,8 +24,8 @@ namespace Poliedro.Client.Infraestructure.Persistence.Mysql.Client.DomainService
 
         public async Task<Result<VoidResult, Error>> CreateClientNaturalAsync(ClientNaturalPosEntity request, CancellationToken cancellationToken)
         {
-            await _context.ClientNaturalPos.AddAsync(request, cancellationToken);
-            var result = await _context.SaveChangesAsync() > 0;
+            await context.ClientNaturalPos.AddAsync(request, cancellationToken);
+            var result = await context.SaveChangesAsync() > 0;
             if (!result)
                 return ClienErrorBuilder.ClientNaturalCreationException();
 
@@ -41,7 +34,7 @@ namespace Poliedro.Client.Infraestructure.Persistence.Mysql.Client.DomainService
 
         public async Task<Result<IEnumerable<ClientLegalPosEntity>, Error>> GetAllLegalAsync(int pageNumber, int pageSize, CancellationToken cancellationToken)
         {
-            var entities = await _context.ClientLegalPos
+            var entities = await context.ClientLegalPos
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize).ToListAsync(cancellationToken);
 
@@ -53,7 +46,7 @@ namespace Poliedro.Client.Infraestructure.Persistence.Mysql.Client.DomainService
 
         public async Task<Result<IEnumerable<ClientNaturalPosEntity>, Error>> GetAllNaturalAsync(int pageNumber, int pageSize, CancellationToken cancellationToken)
         {
-            var entities = await _context.ClientNaturalPos
+            var entities = await context.ClientNaturalPos
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize).ToListAsync(cancellationToken);
 
@@ -69,11 +62,11 @@ namespace Poliedro.Client.Infraestructure.Persistence.Mysql.Client.DomainService
 
             if (type == ClientType.Legal && await LegalClientExists(id, cancellationToken))
             {
-                client = await _context.ClientLegalPos.FirstAsync(c => c.Id == id);
+                client = await context.ClientLegalPos.FirstAsync(c => c.Id == id);
             }
             else if(type == ClientType.Natural && await NaturalClientExists(id, cancellationToken))
             {
-                client = await _context.ClientNaturalPos.FirstAsync(c => c.Id == id);
+                client = await context.ClientNaturalPos.FirstAsync(c => c.Id == id);
             }
             else
             {
@@ -89,11 +82,11 @@ namespace Poliedro.Client.Infraestructure.Persistence.Mysql.Client.DomainService
 
             if (type == ClientType.Legal && await LegalClientExists(documentNumber, cancellationToken))
             {
-                client = await _context.ClientLegalPos.FirstAsync(c => c.DocumentNumber == documentNumber);
+                client = await context.ClientLegalPos.FirstAsync(c => c.DocumentNumber == documentNumber);
             }
             else if (type == ClientType.Natural && await NaturalClientExists(documentNumber, cancellationToken))
             {
-                client = await _context.ClientNaturalPos.FirstAsync(c => c.DocumentNumber == documentNumber);
+                client = await context.ClientNaturalPos.FirstAsync(c => c.DocumentNumber == documentNumber);
             }
             else
             {
@@ -105,28 +98,28 @@ namespace Poliedro.Client.Infraestructure.Persistence.Mysql.Client.DomainService
 
         private async Task<bool> LegalClientExists(int id, CancellationToken cancellationToken)
         {
-            return await _context.ClientLegalPos
+            return await context.ClientLegalPos
                 .AsNoTracking()
                 .AnyAsync(c => c.Id == id, cancellationToken);
         }
 
         private async Task<bool> NaturalClientExists(int id, CancellationToken cancellationToken)
         {
-            return await _context.ClientNaturalPos
+            return await context.ClientNaturalPos
                 .AsNoTracking()
                 .AnyAsync(c => c.Id == id, cancellationToken);
         }
 
         private async Task<bool> LegalClientExists(string documentNumber, CancellationToken cancellationToken)
         {
-            return await _context.ClientLegalPos
+            return await context.ClientLegalPos
                 .AsNoTracking()
                 .AnyAsync(c => c.DocumentNumber == documentNumber, cancellationToken);
         }
 
         private async Task<bool> NaturalClientExists(string documentNumber, CancellationToken cancellationToken)
         {
-            return await _context.ClientNaturalPos
+            return await context.ClientNaturalPos
                 .AsNoTracking()
                 .AnyAsync(c => c.DocumentNumber == documentNumber, cancellationToken);
         }   
