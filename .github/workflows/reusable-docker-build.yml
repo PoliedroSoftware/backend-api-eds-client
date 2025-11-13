@@ -70,6 +70,14 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         
+      - name: Ensure Docker credentials are configured
+        if: ${{ contains(inputs.registry-type, 'dockerhub') || contains(inputs.registry-type, 'both') }}
+        run: |
+          if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ] || [ -z "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
+            echo "ERROR: DOCKERHUB_USERNAME and/or DOCKERHUB_TOKEN secret is missing. Please configure repository secrets."
+            exit 1
+          fi
+        
       - name: Log in to Docker Hub
         if: ${{ contains(inputs.registry-type, 'dockerhub') || contains(inputs.registry-type, 'both') }}
         uses: docker/login-action@v3
