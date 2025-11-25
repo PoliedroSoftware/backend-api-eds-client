@@ -43,13 +43,22 @@ public class BearerTokenMiddleware(
             "/api/v1/health",
             "/health",
             "/swagger",
+            "/swagger/",
             "/index.html",
-            "/swagger.json"
+            "/swagger.json",
+            "/swagger/v1/swagger.json",
+            "/swagger-ui",
+            "/swagger-resources",
+            "/_framework",
+            "/_vs",
+            "/css",
+            "/js"
         };
 
         if (environment.IsDevelopment())
         {
             publicEndpoints.Add("/api/v1/dev");
+            publicEndpoints.Add("/"); // Allow root in development
         }
 
         return publicEndpoints.Any(endpoint => path.StartsWith(endpoint));

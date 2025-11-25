@@ -27,7 +27,7 @@ public class RedisCacheService : ICacheService
         if (!value.HasValue)
             return default;
 
-        return JsonSerializer.Deserialize<T>(value!);
+        return JsonSerializer.Deserialize<T>(value.ToString());
     }
 
     public async Task SetAsync<T>(

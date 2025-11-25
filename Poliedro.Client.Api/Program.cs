@@ -3,6 +3,7 @@ using Poliedro.Billing.Api.Common.Configurations;
 using Poliedro.Billing.Application;
 using Poliedro.Billing.Infraestructure.Persistence.Mysql;
 using Poliedro.Client.Api.Configuration;
+using Poliedro.Client.Api.Endpoints;
 using Poliedro.Client.Api.Extensions;
 using Poliedro.Client.Api.Middleware;
 using Poliedro.Client.Api.Services;
@@ -29,10 +30,8 @@ builder.Services
 
 builder.Services.AddCustomHealthChecks();
 
-builder.Services.AddControllers(options =>
-{
-    options.Filters.Add<GlobalExceptionConfiguration>();
-});
+// Add global exception filter configuration
+builder.Services.AddSingleton<GlobalExceptionConfiguration>();
 
 builder.Services.AddRouting(routing => routing.LowercaseUrls = true);
 builder.Services.AddEndpointsApiExplorer();
@@ -42,10 +41,23 @@ builder.Services.AddSwaggerGen(options =>
     {
         Version = "v1",
         Title = "Poliedro Client API",
-        Description = "API para gestión de clientes - Token validado por API Gateway"
+        Description = "API para gestión de clientes - Token validado por API Gateway",
+        Contact = new OpenApiContact
+        {
+            Name = "Poliedro Software",
+            Email = "support@poliedro.com"
+        }
     });
 
     options.EnableAnnotations();
+
+    // Include XML comments if available
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        options.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
+    }
 
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
@@ -70,6 +82,9 @@ builder.Services.AddSwaggerGen(options =>
             Array.Empty<string>()
         }
     });
+
+    // Custom schema IDs to prevent conflicts
+    options.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
 });
 
 builder.Services.AddCors(options =>
@@ -88,20 +103,32 @@ var app = builder.Build();
 
 app.UseCors("PoliedroBilling");
 
-app.UseMiddleware<BearerTokenMiddleware>();
-
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-        options.RoutePrefix = string.Empty;
-    });
 }
 
+// Swagger must be configured before authentication middleware
+app.UseSwagger();
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Poliedro Client API v1");
+    options.RoutePrefix = string.Empty;
+    options.DocumentTitle = "Poliedro Client API";
+    options.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.List);
+    options.DefaultModelsExpandDepth(-1);
+    options.DisplayRequestDuration();
+});
+
+// Health checks
 app.UseHealthCheckEndpoints();
 
-app.MapControllers();
+// Custom authentication middleware
+app.UseMiddleware<BearerTokenMiddleware>();
+
+// Map Minimal API endpoints
+app.MapClientEndpoints();
+app.MapDocumentTypeEndpoints();
+app.MapHealthApiEndpoints();
+
 app.Run();
