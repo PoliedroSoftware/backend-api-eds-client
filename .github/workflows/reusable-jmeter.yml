@@ -1,5 +1,8 @@
 name: Reusable JMeter Load Testing
 
+permissions:
+  contents: read
+
 on:
   workflow_call:
     inputs:
@@ -112,8 +115,9 @@ jobs:
             exit 1
           fi
           
-          # Check for HTTP 5xx errors
-          error_count=$(grep -c "false" ${{ inputs.results-path }}/results.jtl || true)
+          # Count failed requests - JMeter JTL uses success column (8th field in CSV format)
+          # The pattern matches lines where the success field is exactly "false"
+          error_count=$(awk -F',' 'NR>1 && $8=="false" {count++} END {print count+0}' ${{ inputs.results-path }}/results.jtl)
           total_count=$(tail -n +2 ${{ inputs.results-path }}/results.jtl | wc -l)
           
           echo "Total requests: $total_count"
@@ -123,9 +127,9 @@ jobs:
             error_rate=$(awk "BEGIN {printf \"%.2f\", ($error_count/$total_count)*100}")
             echo "❌ Error rate: ${error_rate}%"
             
-            # Show sample of errors
+            # Show sample of errors (lines where success field is false)
             echo "Sample errors:"
-            grep "false" ${{ inputs.results-path }}/results.jtl | head -5
+            awk -F',' 'NR>1 && $8=="false"' ${{ inputs.results-path }}/results.jtl | head -5
             
             exit 1
           else
@@ -140,7 +144,8 @@ jobs:
           
           if [ -f "${{ inputs.results-path }}/results.jtl" ]; then
             total_requests=$(tail -n +2 ${{ inputs.results-path }}/results.jtl | wc -l)
-            failed_requests=$(grep -c "false" ${{ inputs.results-path }}/results.jtl || echo "0")
+            # Count failed requests using the success column (8th field in CSV format)
+            failed_requests=$(awk -F',' 'NR>1 && $8=="false" {count++} END {print count+0}' ${{ inputs.results-path }}/results.jtl)
             success_rate=$(awk "BEGIN {printf \"%.2f\", (($total_requests-$failed_requests)/$total_requests)*100}")
             
             echo "- **Test Plan**: ${{ inputs.test-plan-path }}" >> $GITHUB_STEP_SUMMARY

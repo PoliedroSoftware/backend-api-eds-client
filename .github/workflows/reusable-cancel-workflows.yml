@@ -1,5 +1,8 @@
 name: Cancel Running Workflows
 
+permissions:
+  actions: write
+
 on:
   workflow_call:
     inputs:

@@ -41,7 +41,7 @@ jobs:
           fetch-depth: 0
           
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarcloud-github-action@v2
         with:
           projectBaseDir: ${{ inputs.working-directory }}
           args: >
