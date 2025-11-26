@@ -1,4 +1,4 @@
-name: Build, Test, Deploy to ECS
+name: Build, Test, Deploy Client API to ECS
 
 permissions:
   contents: read
@@ -7,7 +7,8 @@ permissions:
 on:
   push:
     branches:
-      - feature/pipeline
+      - main
+      - copilot/add-github-actions-workflows
 
   pull_request:
     types: [opened, synchronize, reopened, closed]
@@ -24,9 +25,9 @@ jobs:
   dotnet:
     uses: ./.github/workflows/reusable-dotnet-build.yml
     with:
-      dotnet-version: '10.x'
+      dotnet-version: '10.0.x'
       configuration: 'Release'
-      solution-path: 'Poliedro.EDS.sln'
+      solution-path: 'Poliedro.Client.sln'
       run-tests: true
       cache-key-suffix: ${{ github.sha }}
     secrets:
@@ -48,7 +49,7 @@ jobs:
     needs: dotnet
     uses: ./.github/workflows/reusable-jmeter.yml
     with:
-      test-plan-path: 'LoadTest/EDS.jmx'
+      test-plan-path: 'LoadTest/Billing.jmx'
       results-path: 'LoadTest/results'
       generate-html-report: true
       fail-on-error: true
