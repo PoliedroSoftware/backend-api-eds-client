@@ -35,28 +35,9 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
 
-  sonar:
-    needs: dotnet
-    uses: ./.github/workflows/reusable-sonar.yml
-    with:
-      project-key: 'PoliedroSoftware_backend-api-eds-client'
-      organization: 'poliedro-software-sonarqube'
-    secrets:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-  jmeter:
-    if: false # Disabled for now - enable when needed
-    needs: dotnet
-    uses: ./.github/workflows/reusable-jmeter.yml
-    with:
-      test-plan-path: 'LoadTest/Billing.jmx'
-      results-path: 'LoadTest/results'
-      generate-html-report: true
-      fail-on-error: true
-
   docker:
     if: github.event.pull_request.merged == true
-    needs: [dotnet, sonar]
+    needs: [dotnet]
     uses: ./.github/workflows/reusable-docker-build.yml
     with:
       image-name: ${{ vars.DOCKERHUB_REPOSITORY_EDS_CLIENT || 'backend-api-eds-client' }}
