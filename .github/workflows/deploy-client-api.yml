@@ -52,7 +52,7 @@ jobs:
       ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}             
       
   deploy-dev:
-    if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true || github.event_name == 'push'
     needs: docker
     uses: ./.github/workflows/reusable-aws-deploy.yml
     with:
