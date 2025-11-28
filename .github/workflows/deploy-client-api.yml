@@ -1,4 +1,4 @@
-name: Build, Test, Deploy to ECS
+name: Build, Test, Deploy Client API to ECS
 
 permissions:
   contents: read
@@ -8,6 +8,7 @@ on:
   push:
     branches:
       - main
+      - copilot/add-github-actions-workflows
 
   pull_request:
     types: [opened, synchronize, reopened, closed]
@@ -29,24 +30,30 @@ jobs:
       solution-path: 'Poliedro.Client.sln'
       run-tests: true
       cache-key-suffix: ${{ github.sha }}
-
-  docker:
-    if: github.event.pull_request.merged == true || github.ref == 'refs/heads/main'
-    needs: [dotnet]
-    uses: ./.github/workflows/reusable-docker-build.yml
-    with:
-      image-name: ${{ vars.DOCKERHUB_REPOSITORY_CLIENT || 'backend-api-eds-client' }}
-      image-tag: 'latest'
-      registry-type: 'ecr'  # Push only to ECR
-      aws-region: ${{ vars.AWS_REGION || 'us-east-2' }}
     secrets:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+
+  docker:
+    if: github.event.pull_request.merged == true
+    needs: [dotnet]
+    uses: ./.github/workflows/reusable-docker-build.yml
+    with:
+      image-name: ${{ vars.DOCKERHUB_REPOSITORY_EDS_CLIENT || 'backend-api-eds-client' }}
+      image-tag: 'latest'
+      registry-type: 'both'  # Push to both ECR and Docker Hub
+      aws-region: ${{ vars.AWS_REGION || 'us-east-2' }}
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME_EDS_CLIENT }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-      ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}             
+      ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_CLIENT }}             
       
   deploy-dev:
-    if: github.event.pull_request.merged == true || github.ref == 'refs/heads/main'
+    if: github.event.pull_request.merged == true
     needs: docker
     uses: ./.github/workflows/reusable-aws-deploy.yml
     with:
@@ -57,6 +64,7 @@ jobs:
     secrets:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_ECS_CLUSTER: ${{ secrets.AWS_ECS_CLUSTER }}
-      AWS_ECS_SERVICE: ${{ secrets.AWS_ECS_SERVICE }}
-      TASK_DEFINITION_ARN: ${{ secrets.TASK_DEFINITION_ARN }}
+      AWS_ECS_CLUSTER: ${{ secrets.AWS_ECS_CLUSTER_CLIENT }}
+      AWS_ECS_SERVICE: ${{ secrets.AWS_ECS_SERVICE_CLIENT }}
+      # TASK_DEFINITION_ARN is optional - if not provided, will use latest from service
+      TASK_DEFINITION_ARN: ${{ secrets.TASK_DEFINITION_ARN_CLIENT }}
