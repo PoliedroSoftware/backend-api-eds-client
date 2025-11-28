@@ -9,6 +9,7 @@ on:
     branches:
       - main
       - copilot/add-github-actions-workflows
+      - feature/poliedro
 
   pull_request:
     types: [opened, synchronize, reopened, closed]
