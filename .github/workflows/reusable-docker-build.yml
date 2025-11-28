@@ -120,6 +120,6 @@ jobs:
           file: ${{ inputs.dockerfile }}
           push: true
           platforms: ${{ inputs.platforms }}
-          tags: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:${{ inputs.image-tag }}
+          tags: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ secrets.ECR_REPOSITORY_CLIENT }}:${{ inputs.image-tag }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
