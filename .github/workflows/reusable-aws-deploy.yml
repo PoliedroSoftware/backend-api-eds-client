@@ -65,7 +65,7 @@ jobs:
             echo "No task definition ARN provided, fetching latest from service..."
             TASK_DEF_ARN=$(aws ecs describe-services \
               --cluster ${{ secrets.AWS_ECS_CLUSTER }} \
-              --services ${{ secrets.AWS_ECS_SERVICE }} \
+              --services ${{ secrets.AWS_ECS_SERVICE_CLIENT }} \
               --query 'services[0].taskDefinition' \
               --output text)
             echo "Latest task definition from service: $TASK_DEF_ARN"
@@ -76,14 +76,14 @@ jobs:
         id: deploy
         run: |
           echo "Deploying to ECS cluster: ${{ secrets.AWS_ECS_CLUSTER }}"
-          echo "Service: ${{ secrets.AWS_ECS_SERVICE }}"
+          echo "Service: ${{ secrets.AWS_ECS_SERVICE_CLIEN }}"
           echo "Task Definition: ${{ steps.get-task-def.outputs.task_definition_arn }}"
           echo "Environment: ${{ inputs.environment }}"
           
           # Update the service with force new deployment
           ecs_deploy_result=$(aws ecs update-service \
             --cluster ${{ secrets.AWS_ECS_CLUSTER }} \
-            --service ${{ secrets.AWS_ECS_SERVICE }} \
+            --service ${{ secrets.AWS_ECS_SERVICE_CLIENT }} \
             --task-definition ${{ steps.get-task-def.outputs.task_definition_arn }} \
             --force-new-deployment \
             --output json)
@@ -99,7 +99,7 @@ jobs:
           echo "Waiting for deployment to complete..."
           aws ecs wait services-stable \
             --cluster ${{ secrets.AWS_ECS_CLUSTER }} \
-            --services ${{ secrets.AWS_ECS_SERVICE }} \
+            --services ${{ secrets.AWS_ECS_SERVICE_CLIENT }} \
             --cli-read-timeout ${{ inputs.deployment-timeout }}
             
           echo "Deployment completed successfully"
@@ -111,7 +111,7 @@ jobs:
           # Check service status
           service_status=$(aws ecs describe-services \
             --cluster ${{ secrets.AWS_ECS_CLUSTER }} \
-            --services ${{ secrets.AWS_ECS_SERVICE }} \
+            --services ${{ secrets.AWS_ECS_SERVICE_CLIENT }} \
             --query 'services[0].status' \
             --output text)
           
@@ -120,7 +120,7 @@ jobs:
           # Check running task count
           running_count=$(aws ecs describe-services \
             --cluster ${{ secrets.AWS_ECS_CLUSTER }} \
-            --services ${{ secrets.AWS_ECS_SERVICE }} \
+            --services ${{ secrets.AWS_ECS_SERVICE_CLIENT }} \
             --query 'services[0].runningCount' \
             --output text)
           
@@ -129,7 +129,7 @@ jobs:
           # Check desired count
           desired_count=$(aws ecs describe-services \
             --cluster ${{ secrets.AWS_ECS_CLUSTER }} \
-            --services ${{ secrets.AWS_ECS_SERVICE }} \
+            --services ${{ secrets.AWS_ECS_SERVICE_CLIENT }} \
             --query 'services[0].desiredCount' \
             --output text)
           
